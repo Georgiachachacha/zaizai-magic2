@@ -104,9 +104,9 @@
             }
 
             .game-container {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 10px;
-                padding: 10px;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 8px;
+                padding: 8px;
             }
 
             h1 {
@@ -119,6 +119,7 @@
 
             .card {
                 max-width: none;
+                width: 100%;
             }
         }
 
@@ -192,15 +193,15 @@
         }
 
         /* iPhone 15 specific styles */
-        @media screen and (max-width: 430px) { /* iPhone 15 width */
+        @media screen and (max-width: 430px) {
             body {
-                padding: 10px;
+                padding: 8px;
             }
 
             .game-container {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 12px;
-                padding: 10px;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 6px;
+                padding: 6px;
                 max-width: 100%;
             }
 
@@ -211,12 +212,12 @@
 
             h1 {
                 font-size: 1.8em;
-                margin: 10px 0;
+                margin: 8px 0;
             }
 
             .score {
                 font-size: 1.4em;
-                margin: 10px 0;
+                margin: 8px 0;
             }
         }
 
