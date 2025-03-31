@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ZaiZai's Magic</title>
+    <style>
+        /* Base styles */
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            aspect-ratio: 1;
+            width: 100%;
+            max-width: 300px;
+            height: auto;
+            margin: 0 auto;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            background-image: url('images/card-back.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            /* Add image rendering optimization */
+            image-rendering: optimizeSpeed;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+
+        .card.flipped {
+            background-image: none;
+        }
+
+        .card.flipped img {
+            display: block !important;
+            z-index: 1;
+        }
+
+        .card.matched {
+            background-color: #90EE90;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 3em;
+            margin: 20px 0;
+        }
+
+        .score {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 2.4em;
+        }
+
+        /* Responsive styles for tablets */
+        @media (max-width: 1024px) {
+            .game-container {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 15px;
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 2.5em;
+            }
+
+            .score {
+                font-size: 2em;
+            }
+        }
+
+        /* Responsive styles for mobile phones */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .game-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .score {
+                font-size: 1.6em;
+            }
+
+            .card {
+                max-width: none;
+            }
+        }
+
+        /* Small mobile phones */
+        @media (max-width: 375px) {
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .score {
+                font-size: 1.2em;
+            }
+
+            .game-container {
+                gap: 8px;
+                padding: 8px;
+            }
+        }
+
+        /* Updated Firework styles */
+        .firework {
+            position: fixed;
+            pointer-events: none;
+            z-index: 999;
+            animation: explode 5s ease-out forwards;
+        }
+
+        @keyframes explode {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.8;
+            }
+            100% {
+                transform: scale(5); /* Increased from 2 to 5 for 500% size */
+                opacity: 0;
+            }
+        }
+
+        /* Prevent scrolling when not needed */
+        html, body {
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* MacBook 13-inch specific styles */
+        @media screen and (min-width: 1280px) and (max-width: 2560px) {
+            .game-container {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 20px;
+                max-width: 1200px; /* Optimized for 13-inch display */
+                padding: 20px;
+            }
+
+            .card {
+                max-width: 250px; /* Adjusted for 13-inch screen */
+                height: auto;
+            }
+
+            h1 {
+                font-size: 2.5em;
+                margin: 15px 0;
+            }
+
+            .score {
+                font-size: 2em;
+                margin: 15px 0;
+            }
+        }
+
+        /* iPhone 15 specific styles */
+        @media screen and (max-width: 430px) { /* iPhone 15 width */
+            body {
+                padding: 10px;
+            }
+
+            .game-container {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+                padding: 10px;
+                max-width: 100%;
+            }
+
+            .card {
+                max-width: none;
+                width: 100%;
+            }
+
+            h1 {
+                font-size: 1.8em;
+                margin: 10px 0;
+            }
+
+            .score {
+                font-size: 1.4em;
+                margin: 10px 0;
+            }
+        }
+
+        /* Ensure proper scaling on iPhone 15 */
+        @media screen and (-webkit-min-device-pixel-ratio: 3) {
+            .card img {
+                -webkit-transform: translateZ(0);
+                transform: translateZ(0);
+            }
+        }
+
+        /* Prevent bounce scrolling on iOS */
+        html {
+            position: fixed;
+            height: 100%;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        body {
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            height: 100%;
+        }
+
+        /* Add new styles for game over screen */
+        .game-over-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .game-over-image {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            margin-bottom: 30px;
+        }
+
+        .retry-button {
+            padding: 30px 80px;
+            font-size: 3em;
+            background-color: #ffb347;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            color: white;
+            transition: background-color 0.3s;
+            font-weight: bold;
+        }
+
+        .retry-button:hover {
+            background-color: #ffa726;
+        }
+
+        @media (max-width: 768px) {
+            .game-over-image {
+                max-width: 90%;
+            }
+            
+            .retry-button {
+                padding: 24px 60px;
+                font-size: 2.4em;
+            }
+        }
+
+        /* Add styles for win screen and heart rain */
+        .win-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .win-image {
+            width: 100%;
+            max-width: 600px;
+            height: auto;
+            margin-bottom: 30px;
+        }
+
+        .heart-rain {
+            position: fixed;
+            color: red;
+            font-size: 168px;
+            animation: fall linear;
+            z-index: 1001;
+            transform-origin: center;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(-100vh) scale(1);
+            }
+            50% {
+                transform: translateY(0) scale(1.2);
+            }
+            100% {
+                transform: translateY(100vh) scale(1);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .win-image {
+                max-width: 90%;
+            }
+            
+            .heart-rain {
+                font-size: 120px;
+            }
+        }
+
+        /* Add style for the love button */
+        .love-button {
+            padding: 30px 80px;
+            font-size: 3em;
+            background-color: #FF0000; /* Bright red */
+            color: #FFFFFF; /* White text */
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+
+        .love-button:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            .love-button {
+                padding: 24px 60px;
+                font-size: 2.4em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>ZaiZai's Magic</h1>
+    <div class="score">Moves: <span id="moves">0</span> / 20</div>
+    <div class="game-container" id="gameContainer"></div>
+
+    <script>
+        // Change move limit constant to 20
+        const MOVE_LIMIT = 20;
+        
+        // Update the score display to show new move limit
+        document.querySelector('.score').innerHTML = `Moves: <span id="moves">0</span> / ${MOVE_LIMIT}`;
+        
+        // Simplify the image loading process
+        const catImages = [
+            'images/cat1.jpeg',
+            'images/cat2.jpeg',
+            'images/cat3.jpeg',
+            'images/cat4.jpeg',
+            'images/cat5.jpeg',
+            'images/cat6.jpeg',
+            'images/cat7.jpeg',
+            'images/cat8.jpeg'
+        ];
+
+        // Simplified preload images function
+        function preloadImages() {
+            return Promise.all(catImages.map(src => {
+                return new Promise((resolve, reject) => {
+                    const img = new Image();
+                    img.onload = () => resolve(src);
+                    img.onerror = reject;
+                    img.src = src;
+                });
+            }));
+        }
+
+        // Update createBoard function
+        async function createBoard() {
+            try {
+                const loadedImages = await preloadImages();
+                const gameCards = [...loadedImages, ...loadedImages];
+                const shuffledCards = shuffle(gameCards);
+                const gameContainer = document.getElementById('gameContainer');
+                
+                shuffledCards.forEach((imageUrl, index) => {
+                    const card = document.createElement('div');
+                    card.classList.add('card');
+                    card.dataset.cardIndex = index;
+                    card.dataset.imageUrl = imageUrl;
+                    
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    
+                    card.appendChild(img);
+                    card.addEventListener('click', flipCard);
+                    gameContainer.appendChild(card);
+                });
+            } catch (error) {
+                console.error('Error loading images:', error);
+            }
+        }
+
+        // Add shuffle function if it's missing
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Initialize variables
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+
+        // Handle card flip
+        function flipCard() {
+            if (flippedCards.length === 2) return;
+            if (this.classList.contains('matched')) return;
+            if (flippedCards.includes(this)) return;
+
+            this.classList.add('flipped');
+            flippedCards.push(this);
+
+            if (flippedCards.length === 2) {
+                moves++;
+                document.getElementById('moves').textContent = moves;
+                checkMatch();
+            }
+        }
+
+        // Updated createFirework function with larger particles
+        function createFirework(x, y) {
+            const colors = ['#ff0000', '#ffd700', '#ff69b4', '#00ff00', '#4169e1', '#ff4500', '#9400d3', '#00ffff'];
+            
+            // Create multiple firework bursts
+            for (let burst = 0; burst < 3; burst++) {
+                setTimeout(() => {
+                    // More particles per burst
+                    for (let i = 0; i < 50; i++) {
+                        const particle = document.createElement('div');
+                        particle.className = 'firework';
+                        
+                        const color = colors[Math.floor(Math.random() * colors.length)];
+                        
+                        particle.style.left = x + 'px';
+                        particle.style.top = y + 'px';
+                        const angle = (Math.random() * Math.PI * 2);
+                        const velocity = 200 + Math.random() * 200; // Doubled velocity for larger spread
+                        const size = Math.random() * 15 + 8; // Increased particle size
+                        
+                        particle.style.backgroundColor = color;
+                        particle.style.width = size + 'px';
+                        particle.style.height = size + 'px';
+                        particle.style.borderRadius = '50%';
+                        
+                        particle.animate([
+                            { transform: 'translate(0, 0)' },
+                            { 
+                                transform: `translate(${Math.cos(angle) * velocity}px, ${Math.sin(angle) * velocity}px)`,
+                                opacity: 0
+                            }
+                        ], {
+                            duration: 5000,
+                            easing: 'ease-out'
+                        });
+                        
+                        document.body.appendChild(particle);
+                        
+                        setTimeout(() => {
+                            document.body.removeChild(particle);
+                        }, 5000);
+                    }
+                }, burst * 200);
+            }
+        }
+
+        // Updated checkMatch function to check for move limit
+        function checkMatch() {
+            const [card1, card2] = flippedCards;
+            const match = card1.dataset.imageUrl === card2.dataset.imageUrl;
+
+            if (match) {
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+                
+                // Create fireworks at matched cards
+                const rect1 = card1.getBoundingClientRect();
+                const rect2 = card2.getBoundingClientRect();
+                
+                createFirework(rect1.left + rect1.width / 2, rect1.top + rect1.height / 2);
+                createFirework(rect2.left + rect2.width / 2, rect2.top + rect2.height / 2);
+                
+                // Additional random fireworks around the page
+                for(let i = 0; i < 8; i++) {
+                    setTimeout(() => {
+                        createFirework(
+                            Math.random() * window.innerWidth, 
+                            Math.random() * (window.innerHeight * 0.8)
+                        );
+                    }, i * 200);
+                }
+                
+                if (matchedPairs === catImages.length) {
+                    setTimeout(() => {
+                        showWinScreen();
+                    }, 500);
+                }
+            } else {
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                }, 1000);
+            }
+
+            flippedCards = [];
+
+            // Check if player has reached move limit
+            if (moves >= MOVE_LIMIT && matchedPairs < catImages.length) {
+                setTimeout(() => {
+                    showGameOver();
+                }, 500);
+            }
+        }
+
+        // Update showGameOver function to change button text
+        function showGameOver() {
+            const gameOverScreen = document.createElement('div');
+            gameOverScreen.className = 'game-over-screen';
+
+            const gameOverImage = document.createElement('img');
+            gameOverImage.className = 'game-over-image';
+            gameOverImage.src = 'images/tryagain.jpeg';
+            gameOverImage.alt = 'Try Again';
+
+            const retryButton = document.createElement('button');
+            retryButton.className = 'retry-button';
+            retryButton.textContent = 'TRY AGAIN!';
+            retryButton.onclick = () => {
+                document.body.removeChild(gameOverScreen);
+                resetGame();
+            };
+
+            gameOverScreen.appendChild(gameOverImage);
+            gameOverScreen.appendChild(retryButton);
+            document.body.appendChild(gameOverScreen);
+        }
+
+        // Update reset game function
+        function resetGame() {
+            moves = 0;
+            matchedPairs = 0;
+            flippedCards = [];
+            
+            document.getElementById('moves').textContent = moves;
+            
+            const gameContainer = document.getElementById('gameContainer');
+            gameContainer.innerHTML = '';
+            createBoard();
+        }
+
+        // Initialize game with loading indicator
+        document.addEventListener('DOMContentLoaded', () => {
+            const loadingText = document.createElement('div');
+            loadingText.textContent = 'Loading...';
+            loadingText.style.textAlign = 'center';
+            loadingText.style.fontSize = '1.5em';
+            loadingText.style.margin = '20px';
+            document.body.appendChild(loadingText);
+
+            createBoard().then(() => {
+                document.body.removeChild(loadingText);
+            });
+        });
+
+        // Add heart rain function
+        function createHeartRain() {
+            const heart = document.createElement('div');
+            heart.innerHTML = '❤️';
+            heart.className = 'heart-rain';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = Math.random() * 2 + 3 + 's';
+            document.body.appendChild(heart);
+
+            setTimeout(() => {
+                document.body.removeChild(heart);
+            }, 5000);
+        }
+
+        // Update victory screen
+        function showWinScreen() {
+            const winScreen = document.createElement('div');
+            winScreen.className = 'win-screen';
+
+            const winImage = document.createElement('img');
+            winImage.className = 'win-image';
+            winImage.src = 'images/youwin.jpeg';
+            winImage.alt = 'You Win!';
+
+            const loveButton = document.createElement('button');
+            loveButton.className = 'love-button';
+            loveButton.textContent = 'LOVE ME AGAIN';
+            
+            winScreen.appendChild(winImage);
+            winScreen.appendChild(loveButton);
+            document.body.appendChild(winScreen);
+
+            // Start heart rain
+            const heartRainInterval = setInterval(() => {
+                createHeartRain();
+            }, 100);
+
+            // Only stop heart rain and reset game when button is clicked
+            loveButton.onclick = () => {
+                clearInterval(heartRainInterval);
+                document.body.removeChild(winScreen);
+                resetGame();
+            };
+        }
+    </script>
+</body>
+</html> 
